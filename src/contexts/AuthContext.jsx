@@ -1,56 +1,51 @@
-import { createContext, useState, useEffect } from "react";
+import { createContext, useContext, useState, useEffect } from "react";
 import API from "../services/api";
-import { useNavigate } from "react-router-dom";
 
 const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(JSON.parse(localStorage.getItem("user")) || null);
-  const navigate = useNavigate();
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
+  
 
-  const login = async (email, password) => {
-    try {
-      const res = await API.post("/user/login", { email, password });
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        const storedUserId = localStorage.getItem("userId");
+        if (!storedUserId) {
+          console.warn("User ID not found in localStorage");
+          setLoading(false);
+          return;
+        }
 
-      if (res.data.success) {
-        localStorage.setItem("token", res.data.token);
-        localStorage.setItem("user", JSON.stringify(res.data.user)); // Save user data
+        const res = await API.get(`/user/${storedUserId}/profile`);
         setUser(res.data.user);
-        navigate("/");
+      } catch (err) {
+        console.error("Error fetching user:", err);
+        setUser(null);
       }
-    } catch (err) {
-      throw err;
-    }
-  };
+      setLoading(false);
+    };
 
-  const register = async (formData) => {
-    try {
-      const res = await API.post("/user/register", formData);
-      if (res.data.success) {
-        navigate("/login");
-      }
-    } catch (err) {
-      throw err;
-    }
-  };
-
+    fetchUser();
+  }, []);
   const logout = async () => {
     try {
-      await API.get("/user/logout");
-      localStorage.removeItem("token");
-      localStorage.removeItem("user");
-      setUser(null);
-      navigate("/login");
-    } catch (err) {
-      console.error("Logout failed:", err.response?.data?.message || err.message);
+    //   await API.get("/user/logout", { withCredentials: true }); // Call backend logout API
+      setUser(null); // Reset user state
+      localStorage.removeItem("token"); // Remove token
+      navigate("/login"); // Redirect to login page
+    } catch (error) {
+      console.error("❌ Logout error:", error);
     }
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, register, logout }}>
+    <AuthContext.Provider value={{ user, setUser, loading }}>
       {children}
     </AuthContext.Provider>
   );
 };
 
+export const useAuth = () => useContext(AuthContext);
 export default AuthContext;
