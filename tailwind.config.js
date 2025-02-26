@@ -5,7 +5,13 @@ export default {
     "./src/**/*.{js,ts,jsx,tsx}",
   ],
   theme: {
-    extend: {},
+    extend: {
+      colors: {
+        primary: "#D32323", // Yelp Red
+        dark: "#2D2D2D", // Yelp Black
+        light: "#F5F5F5", // Yelp Gray
+      },
+    },
   },
   plugins: [],
 }
