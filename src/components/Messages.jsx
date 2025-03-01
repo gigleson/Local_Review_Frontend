@@ -1,71 +1,44 @@
-import { useEffect, useState, useRef } from "react";
-import { useChat } from "../contexts/ChatContext";
-import { useAuth } from "../contexts/AuthContext";
+import React from 'react'
+import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar'
+import { Button } from './ui/button'
+import { Link } from 'react-router-dom'
+import { useSelector } from 'react-redux'
+import useGetAllMessage from '@/hooks/useGetAllMessage'
+import useGetRTM from '@/hooks/useGetRTM'
 
 const Messages = ({ selectedUser }) => {
-  const { user } = useAuth();
-  const { messages, fetchMessages, sendMessage } = useChat();
-  const [textMessage, setTextMessage] = useState("");
-  const messagesEndRef = useRef(null);
-
-  // ✅ Fetch chat history when opening chat
-  useEffect(() => {
-    if (selectedUser) fetchMessages(selectedUser._id);
-  }, [selectedUser]);
-
-  // ✅ Scroll to the latest message
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
-
-  const handleSendMessage = async () => {
-    if (!textMessage.trim()) return;
-    
-    console.log("📩 Message to send:", textMessage); // ✅ Debug log
-
-    await sendMessage(selectedUser._id, textMessage);
-    setTextMessage(""); // ✅ Clear input after sending
-};
-
-
-  return (
-    <div className="flex flex-col flex-1">
-      {/* Chat Header */}
-      <div className="flex items-center p-4 bg-gray-200 border-b">
-        <img src={selectedUser?.profilePicture || "https://via.placeholder.com/150"} className="w-10 h-10 rounded-full object-cover" alt="Profile" />
-        <span className="ml-3 font-medium">{selectedUser?.username}</span>
-      </div>
-
-      {/* Messages Container */}
-      <div className="flex-1 overflow-y-auto p-4">
-        {messages.map((msg) => (
-          <div key={msg._id} className={`flex ${msg.senderId === user?._id ? "justify-end" : "justify-start"}`}>
-            <div className={`p-2 rounded-lg max-w-xs break-words ${msg.senderId === user?._id ? "bg-blue-500 text-white" : "bg-gray-200 text-black"}`}>
-              {msg.message}
+    useGetRTM();
+    useGetAllMessage();
+    const {messages} = useSelector(store=>store.chat);
+    const {user} = useSelector(store=>store.auth);
+    return (    
+        <div className='overflow-y-auto flex-1 p-4'>
+            <div className='flex justify-center'>
+                <div className='flex flex-col items-center justify-center'>
+                    <Avatar className="h-20 w-20">
+                        <AvatarImage src={selectedUser?.profilePicture} alt='profile' />
+                        <AvatarFallback>CN</AvatarFallback>
+                    </Avatar>
+                    <span>{selectedUser?.username}</span>
+                    <Link to={`/profile/${selectedUser?._id}`}><Button className="h-8 my-2" variant="secondary">View profile</Button></Link>
+                </div>
             </div>
-          </div>
-        ))}
-        <div ref={messagesEndRef} />
-      </div>
+            <div className='flex flex-col gap-3'>
+                {
+                   messages && messages.map((msg) => {
+                        return (
+                            <div key={msg._id} className={`flex ${msg.senderId === user?._id ? 'justify-end' : 'justify-start'}`}>
+                                <div className={`p-2 rounded-lg max-w-xs break-words ${msg.senderId === user?._id ? 'bg-blue-500 text-white' : 'bg-gray-200 text-black'}`}>
+                                    {msg.message}
+                                </div>
+                            </div>
+                        )
+                    })
+                }
 
-      {/* Input Box */}
-      <div className="p-4 border-t flex">
-        <input
-          type="text"
-          placeholder="Type a message..."
-          className="flex-1 p-2 border rounded"
-          value={textMessage}
-          onChange={(e) => setTextMessage(e.target.value)}
-        />
-        <button
-          onClick={handleSendMessage}
-          className="ml-2 bg-primary text-white px-4 py-2 rounded"
-        >
-          Send
-        </button>
-      </div>
-    </div>
-  );
-};
+            </div>
+        </div>  
+    )
+}
 
-export default Messages;
+export default Messages

@@ -1,19 +1,22 @@
-import React from "react";
-import ReactDOM from "react-dom/client";
-import { BrowserRouter as Router } from "react-router-dom";
-import { AuthProvider } from "./contexts/AuthContext";
-import { ChatProvider } from "./contexts/ChatContext";
-import App from "./App";
-import "./index.css";
+import React from 'react'
+import ReactDOM from 'react-dom/client'
+import App from './App.jsx'
+import './index.css'
+import { Toaster } from './components/ui/sonner.jsx'
+import { Provider } from 'react-redux'
+import store from './redux/store.js'
+import { PersistGate } from 'redux-persist/integration/react'
+import { persistStore } from 'redux-persist'
 
-ReactDOM.createRoot(document.getElementById("root")).render(
+let persistor = persistStore(store)
+
+ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
-    <AuthProvider>
-      <ChatProvider>
-        <Router>
-          <App />
-        </Router>
-      </ChatProvider>
-    </AuthProvider>
-  </React.StrictMode>
-);
+    <Provider store={store}>
+      <PersistGate loading={null} persistor={persistor}>
+        <App />
+        <Toaster />
+      </PersistGate>
+    </Provider>
+  </React.StrictMode>,
+)
